@@ -28,7 +28,16 @@
                         :on-change #(let [v (.. % -target -checked)]
                                       (swap! app-state assoc-in [:options :visual-fx-tilt] v)
                                       (ls/save! "visual-fx-tilt" v))}]
-        [tr-span [:ingame-settings_visual-fx-tilt "Tilt board in perspective"]]]]]
+        [tr-span [:ingame-settings_visual-fx-tilt "Tilt board in perspective"]]]]
+      [:div
+       [:label [:input {:type "checkbox"
+                        :value true
+                        :disabled (not (get-in @app-state [:options :visual-fx]))
+                        :checked (get-in @app-state [:options :visual-fx-sounds] true)
+                        :on-change #(let [v (.. % -target -checked)]
+                                      (swap! app-state assoc-in [:options :visual-fx-sounds] v)
+                                      (ls/save! "visual-fx-sounds" v))}]
+        [tr-span [:ingame-settings_visual-fx-sounds "Effect sounds"]]]]]
 
      [:section
       [tr-element :h4 [:ingame-settings_card-stacking "Card settings"]]

@@ -198,7 +198,8 @@
     (fn []
       (let [show-tabs? (really-my-side? (get-in @player [:identity :side]))
             set-tab! #(reset! selected-tab %)]
-        [:div.panel.blue-shade.stats {:class (when (:active @player) "active-player")}
+        [:div.panel.blue-shade.stats {:class (when (:active @player) "active-player")
+                                      :data-side (some-> (get-in @player [:identity :side]) lower-case)}
          (if-not show-tabs?
            [render-player-panel player]
 

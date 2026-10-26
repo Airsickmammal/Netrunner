@@ -295,6 +295,11 @@
     :sync? false  ; device-specific
     :validate-fn boolean?
     :doc "Enable the enhanced 3D/animated game board theme (device-specific)"}
+   {:key :visual-fx-sounds
+    :default true
+    :sync? false  ; device-specific
+    :validate-fn boolean?
+    :doc "Play synthesised stingers with the enhanced theme's event effects (device-specific)"}
    {:key :visual-fx-tilt
     :default true
     :sync? false  ; device-specific

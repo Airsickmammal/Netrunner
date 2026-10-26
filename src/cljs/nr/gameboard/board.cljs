@@ -721,7 +721,7 @@
                  as-button (r/cursor app-state [:button])
                  gs-side (r/cursor game-state [:side])
                  as-stacked-cards (r/cursor app-state [:options :stacked-cards])]
-      [:div.card-frame.menu-container
+      [:div.card-frame.menu-container {:data-cid cid}
        [:div.blue-shade.card {:class (str (cond
                                             (= cid @icon-hovered) "icon-hovered"
                                             selected "selected"
