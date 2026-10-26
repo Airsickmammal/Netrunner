@@ -2,12 +2,34 @@
   (:require
    [nr.account :refer [post-options]]
    [nr.appstate :refer [app-state]]
+   [nr.local-storage :as ls]
    [nr.translations :refer [tr-element tr-span]]))
 
 (defn settings-pane []
   (fn []
     [:div.settings
      [:section [:button {:on-click #(post-options (constantly nil))} [tr-span [:ingame-settings_save "Save"]]]]
+     [:section
+      [tr-element :h4 [:ingame-settings_visual-fx "Visual effects"]]
+      [tr-element :p [:ingame-settings_device-specific-note "These settings are stored locally and do not sync."]]
+      [:div
+       [:label [:input {:type "checkbox"
+                        :value true
+                        :checked (get-in @app-state [:options :visual-fx])
+                        :on-change #(let [v (.. % -target -checked)]
+                                      (swap! app-state assoc-in [:options :visual-fx] v)
+                                      (ls/save! "visual-fx" v))}]
+        [tr-span [:ingame-settings_visual-fx-enable "Enhanced 3D board and animations"]]]]
+      [:div
+       [:label [:input {:type "checkbox"
+                        :value true
+                        :disabled (not (get-in @app-state [:options :visual-fx]))
+                        :checked (get-in @app-state [:options :visual-fx-tilt] true)
+                        :on-change #(let [v (.. % -target -checked)]
+                                      (swap! app-state assoc-in [:options :visual-fx-tilt] v)
+                                      (ls/save! "visual-fx-tilt" v))}]
+        [tr-span [:ingame-settings_visual-fx-tilt "Tilt board in perspective"]]]]]
+
      [:section
       [tr-element :h4 [:ingame-settings_card-stacking "Card settings"]]
       [:div
