@@ -68,37 +68,59 @@
                      (assoc-in [:session :uid] (:username user))))
         (handler req)))))
 
+(defn- session-cookie
+  "Cookie that logs the browser in as user."
+  [auth user]
+  {"session" (merge {:value (create-token auth user)}
+                    (:cookie auth))})
+
 (defn register-handler
   [{db :system/db
+    auth :system/auth
     {:keys [username password confirm-password email]} :params}]
-  (cond
-    (not (valid-username? username))
-    (response 401 {:message "Username is not valid"})
+  (let [username (some-> username str/trim)
+        email (some-> email str/trim)]
+    (cond
+      (not (valid-username? username))
+      (response 401 {:message "Username is not valid"})
 
-    (not= password confirm-password)
-    (response 401 {:message "Passwords must match"})
+      (not= password confirm-password)
+      (response 401 {:message "Passwords must match"})
 
-    (find-one-as-map-case-insensitive db "users" {:username username})
-    (response 422 {:message "Username taken"})
+      (find-one-as-map-case-insensitive db "users" {:username username})
+      (response 422 {:message "Username taken"})
 
-    (find-one-as-map-case-insensitive db "users" {:email email})
-    (response 424 {:message "Email taken"})
+      (find-one-as-map-case-insensitive db "users" {:email email})
+      (response 424 {:message "Email taken"})
 
-    :else
-    (let [first-user (not (mc/any? db "users"))
-          demo-decks (mc/find-maps db "decks" {:username "__demo__"})]
-      (mc/insert db "users" (create-user username password email :isadmin first-user))
-      (when (not-empty demo-decks)
-        (mc/insert-batch db "decks" (map #(-> %
-                                              (dissoc :_id)
-                                              (assoc :username username))
-                                         demo-decks)))
-      (update-analytics :engagement {:new-user 1})
-      (response 200 {:message "ok"}))))
+      :else
+      (let [first-user (not (mc/any? db "users"))
+            demo-decks (mc/find-maps db "decks" {:username "__demo__"})
+            user (assoc (create-user username password email :isadmin first-user)
+                        :_id (->object-id))]
+        (mc/insert db "users" user)
+        (when (not-empty demo-decks)
+          (mc/insert-batch db "decks" (map #(-> %
+                                                (dissoc :_id)
+                                                (assoc :username username))
+                                           demo-decks)))
+        (update-analytics :engagement {:new-user 1})
+        ;; log the new account straight in rather than making them sign in again
+        (assoc (response 200 {:message "ok"})
+               :cookies (session-cookie auth user))))))
 
 (defn find-non-banned-user
   [db query]
   (active-user? (find-one-as-map-case-insensitive db "users" query)))
+
+(defn- find-login-user
+  "Look a user up by username or email address, ignoring case and stray
+   whitespace (phone keyboards like to capitalise the first letter)."
+  [db login]
+  (when-let [login (some-> login str/trim not-empty)]
+    (find-one-as-map-case-insensitive db "users" (if (str/includes? login "@")
+                                                   {:email login}
+                                                   {:username login}))))
 
 (defn login-handler
   [{db :system/db
@@ -112,7 +134,7 @@
   (let [client-ip (or (some-> headers (get "x-forwarded-for") (str/split #",") first)
                       (some-> headers (get "x-real-ip"))
                       remote-address)
-        user (mc/find-one-as-map db "users" {:username username})]
+        user (find-login-user db username)]
     (cond
       (and user (password/check password (:password user)) (:banned user))
       (response 403 {:error (or @banned-msg "Account Locked")})
@@ -120,12 +142,11 @@
       (response 403 {:error (or @banned-msg "Account Locked")})
       (and user (password/check password (:password user)))
       (do (mc/update db "users"
-                     {:username username}
+                     {:_id (:_id user)}
                      {"$set" {:last-connection (inst/now)
                               :last-ip-address (str client-ip)}})
           (assoc (response 200 {:message "ok"})
-                 :cookies {"session" (merge {:value (create-token auth user)}
-                                            (:cookie auth))}))
+                 :cookies (session-cookie auth user)))
       :else (response 401 {:error "Invalid login or password"}))))
 
 (defn logout-handler [_]

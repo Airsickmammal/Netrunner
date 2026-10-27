@@ -11,7 +11,9 @@
             :secret "Dev salt"
             :cookie {:http-only true
                      :same-site :lax
-                     :secure true
+                     ;; false so phones/tablets on the LAN can stay logged in over plain
+                     ;; http://<pc-ip>:1042 (prod config keeps secure cookies)
+                     :secure false
                      ; 60 days
                      :max-age 5184000}}
  :web/lobby {:interval 1000

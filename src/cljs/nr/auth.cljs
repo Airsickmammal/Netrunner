@@ -115,10 +115,14 @@
       [:h3 "Create an account"]
       [:p.flash-message (:flash-message @s)]
       [:form {:on-submit #(register % s)}
-       [:p [:input {:type "text"
+       [:p [:input {:type "email"
                     :placeholder "Email"
                     :name "email"
                     :ref "email"
+                    :auto-complete "email"
+                    :auto-capitalize "none"
+                    :auto-correct "off"
+                    :spell-check false
                     :value (:email @s)
                     :on-change #(swap! s assoc :email (-> % .-target .-value))
                     :on-blur #(do (check-email (-> % .-target .-value) s)
@@ -128,6 +132,10 @@
                     :placeholder "Username"
                     :name "username"
                     :ref "username"
+                    :auto-complete "username"
+                    :auto-capitalize "none"
+                    :auto-correct "off"
+                    :spell-check false
                     :value (:username @s)
                     :on-change #(swap! s assoc :username (-> % .-target .-value))
                     :on-blur #(check-username (-> % .-target .-value) s)
@@ -136,12 +144,14 @@
                     :placeholder "Password"
                     :name "password"
                     :ref "password"
+                    :auto-complete "new-password"
                     :value (:password @s)
                     :on-change #(swap! s assoc :password (-> % .-target .-value))}]]
        [:p [:input {:type "password"
                     :placeholder "Confirm password"
                     :name "confirm-password"
                     :ref "confirm-password"
+                    :auto-complete "new-password"
                     :value (:confirm-password @s)
                     :on-change #(swap! s assoc :confirm-password (-> % .-target .-value))
                     :on-blur #(let [value (-> % .-target .-value)]
@@ -163,9 +173,13 @@
       [:h3 "Reset your Password"]
       [:p.flash-message (:flash-message @s)]
       [:form {:on-submit #(handle-post % "/forgot" s)}
-       [:p [:input {:type "text"
+       [:p [:input {:type "email"
                     :placeholder "Email"
                     :name "email"
+                    :auto-complete "email"
+                    :auto-capitalize "none"
+                    :auto-correct "off"
+                    :spell-check false
                     :on-blur #(when-not (valid-email? (.. % -target -value))
                                 (swap! s assoc :flash-message "Please enter a valid email address"))}]]
        [:p [:button "Submit"]
@@ -181,8 +195,17 @@
       [:h3 "Log in"]
       [:p.flash-message (:flash-message @s)]
       [:form {:on-submit #(handle-post % "/login" s)}
-       [:p [:input {:type "text" :placeholder "Username" :name "username"}]]
-       [:p [:input {:type "password" :placeholder "Password" :name "password"}]]
+       [:p [:input {:type "text"
+                    :placeholder "Username or email"
+                    :name "username"
+                    :auto-complete "username"
+                    :auto-capitalize "none"
+                    :auto-correct "off"
+                    :spell-check false}]]
+       [:p [:input {:type "password"
+                    :placeholder "Password"
+                    :name "password"
+                    :auto-complete "current-password"}]]
        [:p [:button "Log in"]
         [:button {:data-dismiss "modal"} "Cancel"]]
        [:p "No account? "
