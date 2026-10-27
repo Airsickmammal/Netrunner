@@ -104,6 +104,7 @@
             "update-prizes" ^{:doc "Update prize information (card-backs, etc)"} ["run" "-m" "tasks.update-prizes/command"]
             "update-alt-arts" ^{:doc "Update alt-arts from a private source"} ["run" "-m" "tasks.update-alt-arts/command"]
             "add-deck-to-all" ["run" "-m" "tasks.decks/add-for-all-users"]
+            "import-decks" ^{:doc "Bulk-import NetrunnerDB decklists for a user"} ["run" "-m" "tasks.import-decks/command"]
             "rename-card" ["run" "-m" "tasks.card-rename/command"]
             "card-coverage" ["run" "-m" "tasks.card-coverage/test-coverage"]
             "create-indexes" ["run" "-m" "tasks.index/create-indexes"]
