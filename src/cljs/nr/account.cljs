@@ -703,6 +703,28 @@
                             :on-change #(swap! s assoc :labeled-unrezzed-cards (.. % -target -checked))}]
             [tr-span [:settings_label-unrezzed-cards "Label unrezzed cards"]]]]
 
+          [tr-element :h4 [:settings_visual-fx "Visual effects"]]
+          [:div
+           [:label [:input {:type "checkbox"
+                            :value true
+                            :checked (:visual-fx @s)
+                            :on-change #(swap! s assoc :visual-fx (.. % -target -checked))}]
+            [tr-span [:settings_visual-fx-enable "Enhanced 3D game board and animations"]]]]
+          [:div
+           [:label [:input {:type "checkbox"
+                            :value true
+                            :disabled (not (:visual-fx @s))
+                            :checked (get @s :visual-fx-tilt true)
+                            :on-change #(swap! s assoc :visual-fx-tilt (.. % -target -checked))}]
+            [tr-span [:settings_visual-fx-tilt "Tilt board in perspective"]]]]
+          [:div
+           [:label [:input {:type "checkbox"
+                            :value true
+                            :disabled (not (:visual-fx @s))
+                            :checked (get @s :visual-fx-sounds true)
+                            :on-change #(swap! s assoc :visual-fx-sounds (.. % -target -checked))}]
+            [tr-span [:settings_visual-fx-sounds "Effect sounds"]]]]
+
           [tr-element :h4 [:settings_log-size "Log size"]]
           [:div
            [log-width-option s]
@@ -743,7 +765,8 @@
                                  :runner-board-order :log-width :log-top :log-player-highlight
                                  :blocked-users :alt-arts :gamestats :deckstats :disable-websockets
                                  :archives-sorted :heap-sorted :card-back-display
-                                 :labeled-cards :labeled-unrezzed-cards])
+                                 :labeled-cards :labeled-unrezzed-cards
+                                 :visual-fx :visual-fx-tilt :visual-fx-sounds])
                    (assoc :flash-message ""
                           :all-art-select "wc2015")))]
 

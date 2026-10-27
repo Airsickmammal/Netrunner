@@ -17,6 +17,7 @@
    [nr.cardbrowser :refer [card-as-text]]
    [nr.end-of-game-stats :refer [build-game-stats]]
    [nr.gameboard.actions :refer [send-command]]
+   [nr.gameboard.fx :as fx]
    [nr.gameboard.card-preview :refer [card-highlight-mouse-out
                                       card-highlight-mouse-over card-preview-mouse-out
                                       card-preview-mouse-over put-game-card-in-channel zoom-channel]]
@@ -720,7 +721,7 @@
                  as-button (r/cursor app-state [:button])
                  gs-side (r/cursor game-state [:side])
                  as-stacked-cards (r/cursor app-state [:options :stacked-cards])]
-      [:div.card-frame.menu-container
+      [:div.card-frame.menu-container {:data-cid cid}
        [:div.blue-shade.card {:class (str (cond
                                             (= cid @icon-hovered) "icon-hovered"
                                             selected "selected"
@@ -1166,7 +1167,7 @@
         current-ice (when (and run (pos? run-pos) (<= run-pos (count ices)))
                       (nth ices (dec run-pos)))
         max-hosted (apply max (map #(count (:hosted %)) ices))]
-    [:div.server
+    [:div.server {:class (when run ["running" (str "run-" (:phase run))])}
      [:div.ices {:style {:width (when (pos? max-hosted)
                                   (+ 84 3 (* 42 (dec max-hosted))))}}
       (when-let [run-card (:source-card run)]
@@ -1226,7 +1227,7 @@
         run-pos (:position run)
         current-ice (when (and run (pos? run-pos) (<= run-pos (count ices)))
                       (nth ices (dec run-pos)))]
-    [:div.server
+    [:div.server {:class (when run ["running" (str "run-" (:phase run))])}
      [:div.ices
       (when-let [run-card (:source-card run)]
         [:div.run-card [card-img run-card]])
@@ -2303,6 +2304,7 @@
 
        :component-did-mount
        (fn [this]
+         (fx/reset-tracking!)
          (-> js/document (.addEventListener
                            "keydown"
                            (partial handle-key-down {:render-board? (and @corp @runner @side true)})))
@@ -2375,7 +2377,11 @@
                  corp-servers (r/cursor game-state [:corp :servers])
                  runner-rig (r/cursor game-state [:runner :rig])
                  sfx (r/cursor game-state [:sfx])]
-             [:div.gameview
+             [:div.gameview {:class [(when (fx/enabled?) :fx-enabled)
+                                     (when (fx/tilt?) :fx-tilt)
+                                     (when @fx/shake :fx-shake)]
+                             :style (when (fx/enabled?) (fx/theme-style))}
+              (when (fx/enabled?) [fx/overlay-layer])
               [:div {:class [:gameboard
                              (when @labeled-unrezzed-cards :show-unrezzed-card-labels)
                              (when @labeled-cards :show-card-labels)]}
@@ -2398,6 +2404,7 @@
                                   {:background (str "url(\"" @custom-bg-url "\")")
                                    :background-size "cover"}
                                   {})}]
+               (when (fx/enabled?) [fx/grid-floor])
 
                [:div.right-pane
                 [card-zoom-view zoom-card]
@@ -2407,12 +2414,14 @@
                   [content-pane :log :settings :run-timing :turn-timing])]
 
                [:div.centralpane
-                (if (= op-side :corp)
-                  [board-view-corp me-side op-ident op-deck op-deck-count op-hand op-hand-count op-discard corp-servers run]
-                  [board-view-runner me-side op-ident op-deck op-deck-count op-hand op-hand-count op-discard runner-rig run corp-servers])
-                (if (= me-side :corp)
-                  [board-view-corp me-side me-ident me-deck me-deck-count me-hand me-hand-count me-discard corp-servers run]
-                  [board-view-runner me-side me-ident me-deck me-deck-count me-hand me-hand-count me-discard runner-rig run corp-servers])]
+                ;; .board-plane is display: contents unless the tilted fx theme is on
+                [:div.board-plane {:class (when @run "run-active")}
+                 (if (= op-side :corp)
+                   [board-view-corp me-side op-ident op-deck op-deck-count op-hand op-hand-count op-discard corp-servers run]
+                   [board-view-runner me-side op-ident op-deck op-deck-count op-hand op-hand-count op-discard runner-rig run corp-servers])
+                 (if (= me-side :corp)
+                   [board-view-corp me-side me-ident me-deck me-deck-count me-hand me-hand-count me-discard corp-servers run]
+                   [board-view-runner me-side me-ident me-deck me-deck-count me-hand me-hand-count me-discard runner-rig run corp-servers])]]
 
                [:div.leftpane
                 [:div.opponent
